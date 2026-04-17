@@ -1,401 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Pistol Sales Dashboard</title>
-
-<!-- Keep these for simple copy/paste deployment.
-     If you still get boot issues after this version, next step is bundling with npm instead of CDN. -->
 <script src="https://cdn.jsdelivr.net/npm/monday-sdk-js/dist/main.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
-  :root{
-    --bg:#080d16;
-    --s1:#0d1525;
-    --s2:#111d30;
-    --s3:#16243b;
-    --t1:#f0f4ff;
-    --t2:#8fa8cc;
-    --t3:#4d6a8f;
-    --bd:rgba(255,255,255,.08);
-    --good:#10c97a;
-    --bad:#f04f7a;
-    --warn:#f5a623;
-    --bc:#2d7cf6;
-    --ab:#10c97a;
-    --on:#f04f7a;
-    --skmb:#a67cf6;
-    --qc:#ff6b6b;
-    --atl:#00c8d4;
-    --terr:#ffd740;
-    --other:#7f8ea3;
-    --r:12px;
-  }
-
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{
-    font-family:Inter, Arial, sans-serif;
-    background:
-      radial-gradient(circle at top right, rgba(45,124,246,.12), transparent 26%),
-      radial-gradient(circle at top left, rgba(16,201,122,.08), transparent 18%),
-      var(--bg);
-    color:var(--t1);
-    font-size:13px;
-  }
-
-  .wrap{max-width:1600px;margin:0 auto;padding:22px}
-  .hidden{display:none!important}
-
-  .state{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    min-height:70vh;
-    gap:14px;
-    color:var(--t3);
-    padding:30px;
-    text-align:center;
-  }
-  .state h2{
-    color:var(--t2);
-    font-size:20px;
-    font-weight:800;
-    letter-spacing:-.02em;
-  }
-  .spinner{
-    width:38px;height:38px;
-    border:3px solid rgba(255,255,255,.08);
-    border-top-color:var(--bc);
-    border-radius:999px;
-    animation:spin .9s linear infinite;
-  }
-  @keyframes spin{to{transform:rotate(360deg)}}
-
-  .hdr{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-end;
-    gap:14px;
-    margin-bottom:18px;
-    flex-wrap:wrap;
-  }
-  .eyebrow{
-    color:var(--t3);
-    font-size:11px;
-    text-transform:uppercase;
-    letter-spacing:.14em;
-    margin-bottom:8px;
-  }
-  .hdr h1{
-    font-size:28px;
-    line-height:1;
-    letter-spacing:-.03em;
-    font-weight:900;
-  }
-  .hdr p{
-    color:var(--t3);
-    margin-top:8px;
-    font-size:12px;
-  }
-  .live-badge{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:8px 12px;
-    border-radius:999px;
-    border:1px solid rgba(16,201,122,.25);
-    color:#9ef0ca;
-    background:rgba(16,201,122,.08);
-    font-size:12px;
-  }
-  .live-badge::before{
-    content:"";
-    width:8px;height:8px;border-radius:999px;
-    background:var(--good);
-    box-shadow:0 0 10px rgba(16,201,122,.8);
-  }
-
-  .notice{
-    padding:12px 14px;
-    border-radius:10px;
-    border:1px solid rgba(45,124,246,.18);
-    background:rgba(45,124,246,.08);
-    color:#c7dcff;
-    font-size:12px;
-    line-height:1.5;
-    margin-bottom:16px;
-  }
-
-  .toolbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:12px;
-    flex-wrap:wrap;
-    margin-bottom:18px;
-  }
-
-  .tabs{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-  .tab{
-    border:1px solid var(--bd);
-    background:transparent;
-    color:var(--t3);
-    padding:8px 12px;
-    border-radius:10px;
-    cursor:pointer;
-    font-size:12px;
-    font-weight:700;
-    transition:.15s ease;
-  }
-  .tab:hover{
-    border-color:rgba(255,255,255,.14);
-    color:var(--t2);
-    transform:translateY(-1px);
-  }
-  .tab.active{
-    color:#fff;
-    background:rgba(45,124,246,.18);
-    border-color:rgba(45,124,246,.45);
-    box-shadow:inset 0 0 0 1px rgba(45,124,246,.1);
-  }
-
-  .legend{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-  .legend-chip{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    border:1px solid var(--bd);
-    background:var(--s1);
-    color:var(--t2);
-    padding:6px 10px;
-    border-radius:999px;
-    font-size:11px;
-  }
-  .legend-chip i{
-    width:10px;height:10px;border-radius:999px;display:inline-block;
-  }
-
-  .kpis{
-    display:grid;
-    grid-template-columns:repeat(4,minmax(0,1fr));
-    gap:12px;
-    margin-bottom:16px;
-  }
-  .kpi{
-    background:linear-gradient(180deg, rgba(17,29,48,.95), rgba(13,21,37,.98));
-    border:1px solid var(--bd);
-    border-radius:var(--r);
-    padding:16px;
-  }
-  .kpi-label{
-    color:var(--t3);
-    font-size:10px;
-    text-transform:uppercase;
-    letter-spacing:.08em;
-    margin-bottom:10px;
-  }
-  .kpi-row{
-    display:flex;
-    align-items:flex-end;
-    justify-content:space-between;
-    gap:10px;
-  }
-  .kpi-val{
-    font-size:30px;
-    font-weight:900;
-    letter-spacing:-.04em;
-    line-height:1;
-  }
-  .delta{
-    font-size:11px;
-    font-weight:800;
-    padding:5px 8px;
-    border-radius:999px;
-    border:1px solid transparent;
-  }
-  .up{
-    color:#9ef0ca;
-    background:rgba(16,201,122,.08);
-    border-color:rgba(16,201,122,.18);
-  }
-  .dn{
-    color:#ffb2c4;
-    background:rgba(240,79,122,.08);
-    border-color:rgba(240,79,122,.18);
-  }
-  .neu{
-    color:var(--t3);
-    background:rgba(255,255,255,.04);
-    border-color:rgba(255,255,255,.08);
-  }
-  .kpi-sub{
-    color:var(--t3);
-    font-size:11px;
-    margin-top:8px;
-  }
-
-  .g2{
-    display:grid;
-    grid-template-columns:1.25fr 1fr;
-    gap:12px;
-    margin-bottom:12px;
-  }
-  .panel{
-    background:linear-gradient(180deg, rgba(13,21,37,.98), rgba(10,16,28,.98));
-    border:1px solid var(--bd);
-    border-radius:var(--r);
-    padding:14px;
-  }
-  .panel-hdr{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:12px;
-    margin-bottom:12px;
-  }
-  .panel-hdr h2{
-    font-size:16px;
-    font-weight:800;
-    letter-spacing:-.02em;
-  }
-  .panel-hdr p{
-    color:var(--t3);
-    font-size:11px;
-    margin-top:4px;
-    line-height:1.45;
-  }
-  .kicker{
-    color:var(--t3);
-    font-size:11px;
-  }
-  .chart-shell{
-    position:relative;
-    min-height:380px;
-    height:380px;
-  }
-
-  .summary-grid{
-    display:grid;
-    grid-template-columns:repeat(7,minmax(0,1fr));
-    gap:10px;
-    margin-bottom:12px;
-  }
-  .sum-card{
-    background:var(--s1);
-    border:1px solid var(--bd);
-    border-top:2px solid transparent;
-    border-radius:10px;
-    padding:12px;
-  }
-  .sum-title{
-    color:var(--t3);
-    font-size:10px;
-    text-transform:uppercase;
-    letter-spacing:.08em;
-    margin-bottom:6px;
-  }
-  .sum-value{
-    font-size:22px;
-    font-weight:900;
-    letter-spacing:-.03em;
-  }
-  .sum-meta{
-    color:var(--t3);
-    font-size:11px;
-    margin-top:6px;
-    line-height:1.4;
-  }
-
-  .bottom-grid{
-    display:grid;
-    grid-template-columns:1.2fr .8fr;
-    gap:12px;
-    margin-bottom:12px;
-  }
-
-  .split-grid{
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:10px;
-    margin-bottom:12px;
-  }
-
-  .table{
-    width:100%;
-    border-collapse:collapse;
-  }
-  .table th{
-    color:var(--t3);
-    font-size:10px;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-    text-align:left;
-    padding:8px;
-    border-bottom:1px solid var(--bd);
-  }
-  .table td{
-    padding:8px;
-    font-size:12px;
-    border-bottom:1px solid rgba(255,255,255,.04);
-  }
-  .table tr:hover td{background:var(--s2)}
-
-  .note{
-    padding:12px 14px;
-    border-radius:10px;
-    background:var(--s2);
-    border:1px solid var(--bd);
-    color:var(--t3);
-    line-height:1.55;
-    font-size:11px;
-  }
-
-  .bootlog{
-    margin-top:14px;
-    padding:12px 14px;
-    border-radius:10px;
-    background:#09111e;
-    border:1px solid var(--bd);
-    color:#c9d8ef;
-    font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
-    white-space:pre-wrap;
-    font-size:11px;
-    line-height:1.55;
-  }
-
-  .empty{
-    display:grid;
-    place-items:center;
-    height:100%;
-    border:1px dashed var(--bd);
-    border-radius:10px;
-    color:var(--t3);
-    font-size:13px;
-  }
-
-  canvas{width:100%!important;height:100%!important}
-
-  @media(max-width:1200px){
-    .kpis,.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-    .g2,.bottom-grid{grid-template-columns:1fr}
-  }
-  @media(max-width:760px){
-    .wrap{padding:16px}
-    .kpis,.summary-grid,.split-grid{grid-template-columns:1fr}
-    .hdr{align-items:flex-start}
-    .kpi-val{font-size:26px}
-  }
+:root{
+  --bg:#080d16;--s1:#0d1525;--s2:#111d30;
+  --t1:#f0f4ff;--t2:#8fa8cc;--t3:#4d6a8f;
+  --bd:rgba(255,255,255,.08);
+  --good:#10c97a;--bad:#f04f7a;--warn:#f5a623;
+  --bc:#2d7cf6;--ab:#10c97a;--on:#f04f7a;
+  --skmb:#a67cf6;--qc:#ff6b6b;--atl:#00c8d4;
+  --terr:#ffd740;--other:#7f8ea3;--r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:Inter,Arial,sans-serif;
+  background:radial-gradient(circle at top right,rgba(45,124,246,.12),transparent 26%),radial-gradient(circle at top left,rgba(16,201,122,.08),transparent 18%),var(--bg);
+  color:var(--t1);font-size:13px;
+}
+.wrap{max-width:1600px;margin:0 auto;padding:22px}
+.hidden{display:none!important}
+.state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;gap:14px;color:var(--t3);padding:30px;text-align:center;}
+.state h2{color:var(--t2);font-size:20px;font-weight:800;}
+.spinner{width:38px;height:38px;border:3px solid rgba(255,255,255,.08);border-top-color:var(--bc);border-radius:999px;animation:spin .9s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hdr{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-bottom:18px;flex-wrap:wrap;}
+.eyebrow{color:var(--t3);font-size:11px;text-transform:uppercase;letter-spacing:.14em;margin-bottom:8px;}
+.hdr h1{font-size:28px;line-height:1;letter-spacing:-.03em;font-weight:900;}
+.hdr p{color:var(--t3);margin-top:8px;font-size:12px;}
+.live-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid rgba(16,201,122,.25);color:#9ef0ca;background:rgba(16,201,122,.08);font-size:12px;}
+.live-badge::before{content:"";width:8px;height:8px;border-radius:999px;background:var(--good);box-shadow:0 0 10px rgba(16,201,122,.8);}
+.notice{padding:12px 14px;border-radius:10px;border:1px solid rgba(45,124,246,.18);background:rgba(45,124,246,.08);color:#c7dcff;font-size:12px;line-height:1.5;margin-bottom:16px;}
+.toolbar{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;}
+.tab{border:1px solid var(--bd);background:transparent;color:var(--t3);padding:8px 12px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;transition:.15s ease;}
+.tab:hover{border-color:rgba(255,255,255,.14);color:var(--t2);}
+.tab.active{color:#fff;background:rgba(45,124,246,.18);border-color:rgba(45,124,246,.45);}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px;}
+.kpi{background:linear-gradient(180deg,rgba(17,29,48,.95),rgba(13,21,37,.98));border:1px solid var(--bd);border-radius:var(--r);padding:16px;}
+.kpi-label{color:var(--t3);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.kpi-row{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;}
+.kpi-val{font-size:30px;font-weight:900;letter-spacing:-.04em;line-height:1;}
+.delta{font-size:11px;font-weight:800;padding:5px 8px;border-radius:999px;border:1px solid transparent;}
+.up{color:#9ef0ca;background:rgba(16,201,122,.08);border-color:rgba(16,201,122,.18);}
+.dn{color:#ffb2c4;background:rgba(240,79,122,.08);border-color:rgba(240,79,122,.18);}
+.neu{color:var(--t3);background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08);}
+.kpi-sub{color:var(--t3);font-size:11px;margin-top:8px;}
+.g2{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;margin-bottom:12px;}
+.panel{background:linear-gradient(180deg,rgba(13,21,37,.98),rgba(10,16,28,.98));border:1px solid var(--bd);border-radius:var(--r);padding:14px;}
+.panel-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;}
+.panel-hdr h2{font-size:16px;font-weight:800;letter-spacing:-.02em;}
+.panel-hdr p{color:var(--t3);font-size:11px;margin-top:4px;line-height:1.45;}
+.kicker{color:var(--t3);font-size:11px;}
+.chart-shell{position:relative;min-height:380px;height:380px;}
+.summary-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;margin-bottom:12px;}
+.sum-card{background:var(--s1);border:1px solid var(--bd);border-top:2px solid transparent;border-radius:10px;padding:12px;}
+.sum-title{color:var(--t3);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.sum-value{font-size:22px;font-weight:900;letter-spacing:-.03em;}
+.sum-meta{color:var(--t3);font-size:11px;margin-top:6px;line-height:1.4;}
+.bottom-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin-bottom:12px;}
+.split-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px;}
+.table{width:100%;border-collapse:collapse;}
+.table th{color:var(--t3);font-size:10px;text-transform:uppercase;letter-spacing:.06em;text-align:left;padding:8px;border-bottom:1px solid var(--bd);}
+.table td{padding:8px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.04);}
+.table tr:hover td{background:var(--s2)}
+.note{padding:12px 14px;border-radius:10px;background:var(--s2);border:1px solid var(--bd);color:var(--t3);line-height:1.55;font-size:11px;}
+.bootlog{margin-top:14px;padding:12px 14px;border-radius:10px;background:#09111e;border:1px solid var(--bd);color:#c9d8ef;font-family:ui-monospace,monospace;white-space:pre-wrap;font-size:11px;line-height:1.55;}
+.empty{display:grid;place-items:center;height:100%;border:1px dashed var(--bd);border-radius:10px;color:var(--t3);font-size:13px;}
+canvas{width:100%!important;height:100%!important}
+@media(max-width:1200px){.kpis,.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.g2,.bottom-grid{grid-template-columns:1fr}}
+@media(max-width:760px){.wrap{padding:16px}.kpis,.summary-grid,.split-grid{grid-template-columns:1fr}.kpi-val{font-size:26px}}
 </style>
 </head>
 <body>
@@ -405,12 +83,10 @@
   <h2>Loading dashboard…</h2>
   <p id="loadingMsg">Booting app</p>
 </div>
-
 <div id="errorState" class="state hidden">
   <h2>Could not load dashboard</h2>
   <p id="errorMsg">Unknown error</p>
 </div>
-
 <div id="dashboard" class="wrap hidden">
   <div class="hdr">
     <div>
@@ -420,924 +96,453 @@
     </div>
     <div class="live-badge">Live · read-only</div>
   </div>
-
-  <div class="notice">
-    This view is <strong>read-only</strong>. It only reads board data and renders charts. It does not write back to Monday.com.
-  </div>
-
+  <div class="notice">Read-only view. Does not write to Monday.com.</div>
   <div class="toolbar">
     <div class="tabs" id="periodTabs"></div>
     <div class="tabs" id="channelTabs"></div>
-    <div class="legend">
-      <span class="legend-chip"><i style="background:var(--bc)"></i>BC</span>
-      <span class="legend-chip"><i style="background:var(--ab)"></i>AB</span>
-      <span class="legend-chip"><i style="background:var(--on)"></i>ON</span>
-      <span class="legend-chip"><i style="background:var(--qc)"></i>QC</span>
-      <span class="legend-chip"><i style="background:var(--atl)"></i>Atlantic</span>
-      <span class="legend-chip"><i style="background:var(--skmb)"></i>SK·MB</span>
-      <span class="legend-chip"><i style="background:var(--terr)"></i>Territories</span>
-    </div>
   </div>
-
   <div class="kpis" id="kpis"></div>
-
   <div class="g2">
     <section class="panel">
       <div class="panel-hdr">
-        <div>
-          <h2>Top SKUs · sell-through</h2>
-          <p>X from X+Y · OOS = 0 · summary rows removed · retired groups ignored</p>
-        </div>
+        <div><h2>Top SKUs · sell-through</h2><p>X from X+Y · OOS=0 · retired groups ignored</p></div>
         <div class="kicker" id="skuCount">0 SKUs</div>
       </div>
       <div class="chart-shell" id="barShell">
-        <canvas id="barChart" aria-label="Top SKUs bar chart" role="img"></canvas>
+        <canvas id="barChart" role="img"></canvas>
       </div>
     </section>
-
     <section class="panel">
       <div class="panel-hdr">
-        <div>
-          <h2>Weekly trend · top 5</h2>
-          <p id="trendLabel">Current selection</p>
-        </div>
+        <div><h2>Weekly trend · top 5</h2><p id="trendLabel">Current selection</p></div>
       </div>
       <div class="chart-shell">
-        <canvas id="lineChart" aria-label="Weekly trend line chart" role="img"></canvas>
+        <canvas id="lineChart" role="img"></canvas>
       </div>
     </section>
   </div>
-
   <section class="summary-grid" id="channelSummary"></section>
-
   <div class="bottom-grid">
     <section class="panel">
-      <div class="panel-hdr">
-        <div>
-          <h2>Out-of-stock tracker</h2>
-          <p>Based on loaded sold-history only</p>
-        </div>
-      </div>
+      <div class="panel-hdr"><div><h2>Out-of-stock tracker</h2><p>Based on loaded sold-history</p></div></div>
       <table class="table">
-        <thead>
-          <tr>
-            <th>SKU</th>
-            <th>Family</th>
-            <th>Last OOS</th>
-            <th>OOS weeks</th>
-            <th>Status</th>
-          </tr>
-        </thead>
+        <thead><tr><th>SKU</th><th>Channel</th><th>Last OOS</th><th>OOS weeks</th><th>Status</th></tr></thead>
         <tbody id="oosBody"></tbody>
       </table>
     </section>
-
     <section class="panel">
-      <div class="panel-hdr">
-        <div>
-          <h2>Ontario split</h2>
-          <p>All groups containing ON → Ontario. Split by GL / FT / Other ON.</p>
-        </div>
-      </div>
+      <div class="panel-hdr"><div><h2>Ontario split</h2><p>GL / FT / Other ON</p></div></div>
       <div class="split-grid" id="ontarioSplit"></div>
       <div class="chart-shell" style="height:220px;min-height:220px">
-        <canvas id="ontarioChart" aria-label="Ontario split chart" role="img"></canvas>
+        <canvas id="ontarioChart" role="img"></canvas>
       </div>
     </section>
   </div>
-
   <div class="note">
-    <strong>Logic:</strong> cells like <strong>X+Y</strong> count only <strong>X</strong> as sell-through.
-    <strong>OOS</strong> counts as 0 and is tracked separately.
-    Groups containing <strong>ON</strong> are treated as Ontario.
-    Rows named like <strong>Cases sold per…</strong> are excluded.
-    Groups with <strong>Retired</strong> in the title are excluded.
+    <strong>Logic:</strong> X+Y cells → only X is sell-through. OOS = 0.
+    Groups with ON = Ontario. Retired groups excluded.
   </div>
-
-  <div class="bootlog" id="bootLog">Boot log will appear here…</div>
+  <div class="bootlog" id="bootLog">Boot log…</div>
 </div>
 
 <script>
-(function () {
-  "use strict";
+(function(){
+"use strict";
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // BOOT / DEBUG
-  // ────────────────────────────────────────────────────────────────────────────
-  const bootLines = [];
-  function logBoot(msg) {
-    const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
-    bootLines.push(line);
-    const el = document.getElementById("bootLog");
-    if (el) el.textContent = bootLines.join("\\n");
-    const loadingMsg = document.getElementById("loadingMsg");
-    if (loadingMsg) loadingMsg.textContent = msg;
-    console.log(line);
-  }
+// ── BOOT LOG ──────────────────────────────────────────────────────────────────
+const bootLines=[];
+function logBoot(msg){
+  const line=`[${new Date().toLocaleTimeString()}] ${msg}`;
+  bootLines.push(line);
+  const el=document.getElementById("bootLog");
+  if(el) el.textContent=bootLines.join("\n");
+  const lm=document.getElementById("loadingMsg");
+  if(lm) lm.textContent=msg;
+  console.log(line);
+}
+function showError(msg){
+  logBoot("ERROR: "+msg);
+  document.getElementById("loadingState").classList.add("hidden");
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("errorState").classList.remove("hidden");
+  document.getElementById("errorMsg").textContent=msg;
+}
+window.onerror=function(msg,src,line,col,err){showError(err?.message||String(msg));return false;};
+window.onunhandledrejection=function(e){showError(e?.reason?.message||String(e.reason||"Unhandled rejection"));};
 
-  function showError(message) {
-    logBoot(`ERROR: ${message}`);
-    document.getElementById("loadingState").classList.add("hidden");
-    document.getElementById("dashboard").classList.add("hidden");
-    document.getElementById("errorState").classList.remove("hidden");
-    document.getElementById("errorMsg").textContent = message;
-  }
+// ── GUARDS ────────────────────────────────────────────────────────────────────
+if(!window.mondaySdk){showError("mondaySdk failed to load.");return;}
+if(!window.Chart){showError("Chart.js failed to load.");return;}
 
-  window.onerror = function (msg, src, line, col, err) {
-    showError(err?.message || String(msg));
-    return false;
-  };
+// ── SDK INIT ──────────────────────────────────────────────────────────────────
+const monday=window.mondaySdk();
+monday.setApiVersion("2024-10");
 
-  window.onunhandledrejection = function (event) {
-    showError(event?.reason?.message || String(event.reason || "Unhandled promise rejection"));
-  };
+// ── GET CONTEXT WITH TIMEOUT FALLBACK ─────────────────────────────────────────
+// monday.get("context") can silently hang in some iframe configurations.
+// We race it against a timeout and also listen via the listener API.
+function getContextWithTimeout(ms){
+  return new Promise((resolve,reject)=>{
+    let settled=false;
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // GUARDS
-  // ────────────────────────────────────────────────────────────────────────────
-  if (!window.mondaySdk) {
-    showError("mondaySdk failed to load from CDN.");
-    return;
-  }
-  if (!window.Chart) {
-    showError("Chart.js failed to load from CDN.");
-    return;
-  }
+    // Method 1: monday.get("context")
+    monday.get("context").then(ctx=>{
+      if(!settled){settled=true;resolve(ctx);}
+    }).catch(()=>{});
 
-  const monday = window.mondaySdk();
-  monday.setApiVersion("2024-10");
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // APP STATE
-  // ────────────────────────────────────────────────────────────────────────────
-  let RAW_ITEMS = [];
-  let SOLD_COLUMNS = [];    // most recent first [{id,title,label,date}]
-  let PERIODS = [];         // [{key,label,n}]
-  let activePeriod = "8w";
-  let activeFamily = "all";
-
-  let barChart = null;
-  let lineChart = null;
-  let ontarioChart = null;
-
-  const FAMILY_META = {
-    all:         { label: "All",         color: "#7f8ea3" },
-    bc:          { label: "BC",          color: "#2d7cf6" },
-    ab:          { label: "AB",          color: "#10c97a" },
-    on:          { label: "ON",          color: "#f04f7a" },
-    qc:          { label: "QC",          color: "#ff6b6b" },
-    atlantic:    { label: "Atlantic",    color: "#00c8d4" },
-    skmb:        { label: "SK·MB",       color: "#a67cf6" },
-    territories: { label: "Territories", color: "#ffd740" },
-    other:       { label: "Other",       color: "#7f8ea3" }
-  };
-
-  const MONTH_MAP = {
-    jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
-    jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
-  };
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // HELPERS
-  // ────────────────────────────────────────────────────────────────────────────
-  function fmt(n) {
-    return Math.round(n || 0).toLocaleString("en-CA");
-  }
-
-  function formatPercent(v) {
-    const n = Math.round((v || 0) * 10) / 10;
-    const sign = n > 0 ? "+" : "";
-    return `${sign}${n}%`;
-  }
-
-  function deltaClass(v) {
-    if (v > 0) return "up";
-    if (v < 0) return "dn";
-    return "neu";
-  }
-
-  function percentDelta(current, previous) {
-    if (previous === 0 && current === 0) return 0;
-    if (previous === 0) return 100;
-    return ((current - previous) / previous) * 100;
-  }
-
-  function sum(arr) {
-    return arr.reduce((a, b) => a + b, 0);
-  }
-
-  function parseValue(raw) {
-    if (raw === null || raw === undefined || raw === "") {
-      return { val: 0, oos: false, nodata: true };
-    }
-
-    const s = String(raw).trim();
-
-    if (/^oos$/i.test(s) || /^oos\\b/i.test(s)) {
-      return { val: 0, oos: true, nodata: false };
-    }
-
-    const first = s.split("+")[0].replace(/[^\\d.\\-]/g, "");
-    const n = parseFloat(first);
-
-    return {
-      val: Number.isFinite(n) ? n : 0,
-      oos: false,
-      nodata: false
-    };
-  }
-
-  function parseSoldColumnDate(title) {
-    // examples:
-    // Sold Apr 13
-    // Sold Jan 5 2026
-    // Sold Sept 29
-    const match = title.match(/Sold\\s+([A-Za-z]+)\\s+(\\d{1,2})(?:\\s+(\\d{4}))?/i);
-    if (!match) return new Date(0);
-
-    const monRaw = match[1].toLowerCase();
-    const mon = MONTH_MAP[monRaw.slice(0, 3)];
-    const day = parseInt(match[2], 10);
-
-    let year = match[3] ? parseInt(match[3], 10) : null;
-
-    if (!year) {
-      // heuristic tuned for this board's visible range
-      // Jan-Apr => 2026
-      // May-Dec => 2025
-      year = mon <= 3 ? 2026 : 2025;
-    }
-
-    return new Date(year, mon, day);
-  }
-
-  function isSummaryRow(name) {
-    return /cases\\s+sold\\s+per/i.test(name || "");
-  }
-
-  function isRetiredGroup(groupTitle) {
-    return /retired/i.test(groupTitle || "");
-  }
-
-  function detectFamilyFromGroup(groupTitle) {
-    const title = String(groupTitle || "").trim();
-
-    if (isRetiredGroup(title)) return "retired";
-
-    if (/\\bON\\b/i.test(title)) return "on";
-    if (/^BC\\b/i.test(title)) return "bc";
-    if (/^AB\\b/i.test(title)) return "ab";
-    if (/^QC\\b/i.test(title)) return "qc";
-    if (/^(NS|NL)\\b/i.test(title)) return "atlantic";
-    if (/^(SK|MB)\\b/i.test(title)) return "skmb";
-    if (/^(NWT|YK)\\b/i.test(title)) return "territories";
-
-    return "other";
-  }
-
-  function detectOntarioType(itemName) {
-    if (/^GL\\s*-/i.test(itemName)) return "GL";
-    if (/^FT\\s*-/i.test(itemName)) return "FT";
-    return "Other ON";
-  }
-
-  function getBoardIdFromContextShape(ctx) {
-    return (
-      ctx?.data?.boardId ||
-      ctx?.data?.boardIds?.[0] ||
-      ctx?.boardId ||
-      null
-    );
-  }
-
-  function getActivePeriodDef() {
-    return PERIODS.find(p => p.key === activePeriod) || PERIODS[0];
-  }
-
-  function getItemsForActiveFamily() {
-    if (activeFamily === "all") return RAW_ITEMS;
-    return RAW_ITEMS.filter(item => item.family === activeFamily);
-  }
-
-  function getPeriodValues(item, n) {
-    return item.values.slice(0, n).map(v => v.val);
-  }
-
-  function getPeriodTotal(item, n) {
-    return sum(getPeriodValues(item, n));
-  }
-
-  function getMostRecentNonEmptyWeekIndex(items) {
-    for (let i = 0; i < SOLD_COLUMNS.length; i++) {
-      const hasData = items.some(item => {
-        const v = item.values[i];
-        return v && (!v.nodata);
-      });
-      if (hasData) return i;
-    }
-    return 0;
-  }
-
-  function getWeekTotal(items, weekIndex) {
-    return items.reduce((acc, item) => acc + ((item.values[weekIndex]?.val) || 0), 0);
-  }
-
-  function getActiveSkuCount(items, n) {
-    return items.filter(item => getPeriodTotal(item, n) > 0).length;
-  }
-
-  function getTopItems(items, n, count) {
-    return [...items]
-      .map(item => ({ ...item, total: getPeriodTotal(item, n) }))
-      .filter(item => item.total > 0)
-      .sort((a, b) => b.total - a.total)
-      .slice(0, count);
-  }
-
-  function getAvailableFamilies() {
-    const seen = new Set(RAW_ITEMS.map(i => i.family).filter(k => FAMILY_META[k]));
-    return ["all", ...Object.keys(FAMILY_META).filter(k => k !== "all" && seen.has(k))];
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // MONDAY FETCH
-  // ────────────────────────────────────────────────────────────────────────────
-  async function getContextBoardId() {
-    logBoot("Requesting monday context");
-    const ctx = await monday.get("context");
-    logBoot(`Context received: ${JSON.stringify(ctx)}`);
-    let boardId = getBoardIdFromContextShape(ctx);
-
-    if (!boardId) {
-      // fallback: parse from URL if possible
-      const m = window.location.pathname.match(/\\/boards\\/(\\d+)/);
-      if (m) {
-        boardId = m[1];
-        logBoot(`Board ID recovered from URL: ${boardId}`);
-      }
-    }
-
-    if (!boardId) {
-      throw new Error("No board ID found in context.");
-    }
-
-    return Number(boardId);
-  }
-
-  async function fetchBoardStructure(boardId) {
-    logBoot(`Loading board structure for #${boardId}`);
-
-    const query = `
-      query {
-        boards(ids: [${boardId}]) {
-          id
-          name
-          columns { id title type }
-          groups { id title }
-        }
-      }
-    `;
-
-    const res = await monday.api(query);
-    const board = res?.data?.boards?.[0];
-
-    if (!board) {
-      throw new Error("Board structure query returned no board.");
-    }
-
-    return board;
-  }
-
-  async function fetchAllItems(boardId, columnIds) {
-    logBoot(`Loading items with pagination (${columnIds.length} sold columns)`);
-    const all = [];
-    let cursor = null;
-
-    do {
-      const cursorArg = cursor ? `, cursor: ${JSON.stringify(cursor)}` : "";
-      const idsArg = columnIds.map(id => JSON.stringify(id)).join(",");
-
-      const query = `
-        query {
-          boards(ids: [${boardId}]) {
-            items_page(limit: 100${cursorArg}) {
-              cursor
-              items {
-                id
-                name
-                group { id title }
-                column_values(ids: [${idsArg}]) {
-                  id
-                  text
-                }
-              }
-            }
-          }
-        }
-      `;
-
-      const res = await monday.api(query);
-      const page = res?.data?.boards?.[0]?.items_page;
-
-      if (!page) {
-        throw new Error("items_page returned no data.");
-      }
-
-      all.push(...(page.items || []));
-      cursor = page.cursor || null;
-      logBoot(`Fetched ${all.length} items so far`);
-    } while (cursor);
-
-    return all;
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // RENDERERS
-  // ────────────────────────────────────────────────────────────────────────────
-  function renderPeriodTabs() {
-    const el = document.getElementById("periodTabs");
-    el.innerHTML = PERIODS.map(period => `
-      <button class="tab ${period.key === activePeriod ? "active" : ""}" data-period="${period.key}">
-        ${period.label}
-      </button>
-    `).join("");
-
-    el.querySelectorAll("[data-period]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        activePeriod = btn.dataset.period;
-        renderAll();
-      });
+    // Method 2: monday.listen("context", ...) — fires when context is ready
+    monday.listen("context",(ctx)=>{
+      if(!settled){settled=true;resolve(ctx);}
     });
-  }
 
-  function renderChannelTabs() {
-    const el = document.getElementById("channelTabs");
-    const families = getAvailableFamilies();
-
-    el.innerHTML = families.map(key => `
-      <button class="tab ${key === activeFamily ? "active" : ""}" data-family="${key}">
-        ${FAMILY_META[key]?.label || key}
-      </button>
-    `).join("");
-
-    el.querySelectorAll("[data-family]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        activeFamily = btn.dataset.family;
-        renderAll();
-      });
-    });
-  }
-
-  function renderKPIs() {
-    const items = getItemsForActiveFamily();
-    const periodDef = getActivePeriodDef();
-    const n = periodDef.n;
-
-    const latestIdx = getMostRecentNonEmptyWeekIndex(items);
-    const priorIdx = Math.min(latestIdx + 1, SOLD_COLUMNS.length - 1);
-
-    const currentWeek = getWeekTotal(items, latestIdx);
-    const priorWeek = getWeekTotal(items, priorIdx);
-
-    const rolling4 = [latestIdx, latestIdx + 1, latestIdx + 2, latestIdx + 3]
-      .filter(i => i < SOLD_COLUMNS.length)
-      .reduce((acc, idx) => acc + getWeekTotal(items, idx), 0);
-
-    const priorRolling4 = [priorIdx, priorIdx + 1, priorIdx + 2, priorIdx + 3]
-      .filter(i => i < SOLD_COLUMNS.length)
-      .reduce((acc, idx) => acc + getWeekTotal(items, idx), 0);
-
-    const totalPeriod = items.reduce((acc, item) => acc + getPeriodTotal(item, n), 0);
-    const avgPeriod = n ? totalPeriod / n : 0;
-    const activeSkus = getActiveSkuCount(items, n);
-
-    const periodTitle = periodDef.label.replace(/^./, s => s.toUpperCase());
-    const latestLabel = SOLD_COLUMNS[latestIdx]?.label || "Latest";
-    const priorLabel = SOLD_COLUMNS[priorIdx]?.label || "Prior";
-
-    const cards = [
-      {
-        label: `${latestLabel} cases`,
-        value: currentWeek,
-        delta: percentDelta(currentWeek, priorWeek),
-        sub: `vs ${priorLabel}`
-      },
-      {
-        label: "Rolling 4-week total",
-        value: rolling4,
-        delta: percentDelta(rolling4, priorRolling4),
-        sub: "latest rolling month view"
-      },
-      {
-        label: `${periodTitle} avg / week`,
-        value: avgPeriod,
-        delta: percentDelta(avgPeriod, priorWeek),
-        sub: `${fmt(totalPeriod)} total in selected period`
-      },
-      {
-        label: "Active SKUs",
-        value: activeSkus,
-        delta: 0,
-        sub: `${items.length} SKUs in current view`
+    // Timeout fallback
+    setTimeout(()=>{
+      if(!settled){
+        settled=true;
+        logBoot("Context timeout — trying URL fallback");
+        resolve(null);
       }
-    ];
+    },ms);
+  });
+}
 
-    document.getElementById("kpis").innerHTML = cards.map(card => `
-      <div class="kpi">
-        <div class="kpi-label">${card.label}</div>
-        <div class="kpi-row">
-          <div class="kpi-val">${fmt(card.value)}</div>
-          <div class="delta ${deltaClass(card.delta)}">${formatPercent(card.delta)}</div>
-        </div>
-        <div class="kpi-sub">${card.sub}</div>
-      </div>
-    `).join("");
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let RAW_ITEMS=[],SOLD_COLUMNS=[],PERIODS=[];
+let activePeriod="8w",activeFamily="all";
+let barChart=null,lineChart=null,ontarioChart=null;
+
+const FAMILY_META={
+  all:{label:"All",color:"#7f8ea3"},
+  bc:{label:"BC",color:"#2d7cf6"},
+  ab:{label:"AB",color:"#10c97a"},
+  on:{label:"ON",color:"#f04f7a"},
+  qc:{label:"QC",color:"#ff6b6b"},
+  atlantic:{label:"Atlantic",color:"#00c8d4"},
+  skmb:{label:"SK·MB",color:"#a67cf6"},
+  territories:{label:"Territories",color:"#ffd740"},
+  other:{label:"Other",color:"#7f8ea3"}
+};
+const MONTH_MAP={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function fmt(n){return Math.round(n||0).toLocaleString("en-CA");}
+function fmtPct(v){const n=Math.round((v||0)*10)/10;return (n>0?"+":"")+n+"%";}
+function dcls(v){return v>0?"up":v<0?"dn":"neu";}
+function pctDelta(a,b){if(!b&&!a)return 0;if(!b)return 100;return((a-b)/b)*100;}
+function sum(arr){return arr.reduce((a,b)=>a+b,0);}
+
+function parseVal(raw){
+  if(raw===null||raw===undefined||raw==="")return{val:0,oos:false,nodata:true};
+  const s=String(raw).trim();
+  if(/^oos\b/i.test(s))return{val:0,oos:true,nodata:false};
+  const first=s.split("+")[0].replace(/[^\d.\-]/g,"");
+  const n=parseFloat(first);
+  return{val:Number.isFinite(n)?n:0,oos:false,nodata:false};
+}
+
+function parseSoldColDate(title){
+  const m=title.match(/Sold\s+([A-Za-z]+)\s+(\d{1,2})(?:\s+(\d{4}))?/i);
+  if(!m)return new Date(0);
+  const mon=MONTH_MAP[m[1].toLowerCase().slice(0,3)];
+  const day=parseInt(m[2],10);
+  let year=m[3]?parseInt(m[3],10):(mon<=3?2026:2025);
+  return new Date(year,mon,day);
+}
+
+function isRetired(g){return/retired/i.test(g||"");}
+function isSummaryRow(n){return/cases\s+sold\s+per/i.test(n||"");}
+
+function detectFamily(groupTitle){
+  const t=String(groupTitle||"").trim();
+  if(isRetired(t))return"retired";
+  if(/\bON\b/i.test(t))return"on";
+  if(/^BC\b/i.test(t))return"bc";
+  if(/^AB\b/i.test(t))return"ab";
+  if(/^QC\b/i.test(t))return"qc";
+  if(/^(NS|NL)\b/i.test(t))return"atlantic";
+  if(/^(SK|MB)\b/i.test(t))return"skmb";
+  if(/^(NWT|YK)\b/i.test(t))return"territories";
+  return"other";
+}
+function detectONType(name){
+  if(/^GL\s*-/i.test(name))return"GL";
+  if(/^FT\s*-/i.test(name))return"FT";
+  return"Other ON";
+}
+function getBoardId(ctx){
+  return ctx?.data?.boardId||ctx?.data?.boardIds?.[0]||ctx?.boardId||null;
+}
+function getPeriodDef(){return PERIODS.find(p=>p.key===activePeriod)||PERIODS[0];}
+function getItems(){return activeFamily==="all"?RAW_ITEMS:RAW_ITEMS.filter(i=>i.family===activeFamily);}
+function getPVals(item,n){return item.values.slice(0,n).map(v=>v.val);}
+function getTotal(item,n){return sum(getPVals(item,n));}
+function latestIdx(items){
+  for(let i=0;i<SOLD_COLUMNS.length;i++){
+    if(items.some(it=>{const v=it.values[i];return v&&!v.nodata;}))return i;
   }
+  return 0;
+}
+function wkTotal(items,idx){return items.reduce((a,it)=>a+((it.values[idx]?.val)||0),0);}
+function activeSkus(items,n){return items.filter(it=>getTotal(it,n)>0).length;}
+function topItems(items,n,count){
+  return[...items].map(it=>({...it,total:getTotal(it,n)})).filter(it=>it.total>0)
+    .sort((a,b)=>b.total-a.total).slice(0,count);
+}
+function availFamilies(){
+  const seen=new Set(RAW_ITEMS.map(i=>i.family).filter(k=>FAMILY_META[k]));
+  return["all",...Object.keys(FAMILY_META).filter(k=>k!=="all"&&seen.has(k))];
+}
 
-  function renderBarChart() {
-    const items = getItemsForActiveFamily();
-    const n = getActivePeriodDef().n;
-    const top = getTopItems(items, n, 20);
+// ── FETCH ─────────────────────────────────────────────────────────────────────
+async function fetchStructure(boardId){
+  logBoot("Loading board structure…");
+  const res=await monday.api(`query{boards(ids:[${boardId}]){id name columns{id title type}groups{id title}}}`);
+  const board=res?.data?.boards?.[0];
+  if(!board)throw new Error("Board query returned no data.");
+  return board;
+}
 
-    document.getElementById("skuCount").textContent = `${top.length} SKUs shown`;
+async function fetchAllItems(boardId,colIds){
+  const all=[];let cursor=null;
+  do{
+    logBoot(`Fetching items… (${all.length} so far)`);
+    const ca=cursor?`, cursor: ${JSON.stringify(cursor)}`:"";
+    const ia=colIds.map(id=>JSON.stringify(id)).join(",");
+    const res=await monday.api(`query{boards(ids:[${boardId}]){items_page(limit:100${ca}){cursor items{id name group{id title}column_values(ids:[${ia}]){id text}}}}}`);
+    const page=res?.data?.boards?.[0]?.items_page;
+    if(!page)throw new Error("items_page returned no data.");
+    all.push(...(page.items||[]));
+    cursor=page.cursor||null;
+  }while(cursor);
+  return all;
+}
 
-    if (barChart) barChart.destroy();
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderTabs(){
+  const pe=document.getElementById("periodTabs");
+  pe.innerHTML=PERIODS.map(p=>`<button class="tab ${p.key===activePeriod?"active":""}" data-period="${p.key}">${p.label}</button>`).join("");
+  pe.querySelectorAll("[data-period]").forEach(b=>b.addEventListener("click",()=>{activePeriod=b.dataset.period;renderAll();}));
 
-    const shell = document.getElementById("barShell");
-    const desiredHeight = Math.max(360, top.length * 28 + 80);
-    shell.style.height = `${desiredHeight}px`;
+  const ce=document.getElementById("channelTabs");
+  ce.innerHTML=availFamilies().map(k=>`<button class="tab ${k===activeFamily?"active":""}" data-fam="${k}">${FAMILY_META[k]?.label||k}</button>`).join("");
+  ce.querySelectorAll("[data-fam]").forEach(b=>b.addEventListener("click",()=>{activeFamily=b.dataset.fam;renderAll();}));
+}
 
-    if (!top.length) {
-      shell.innerHTML = `<div class="empty">No SKUs available for this filter.</div>`;
-      return;
+function renderKPIs(){
+  const items=getItems(),n=getPeriodDef().n;
+  const li=latestIdx(items),pi=Math.min(li+1,SOLD_COLUMNS.length-1);
+  const cw=wkTotal(items,li),pw=wkTotal(items,pi);
+  const r4=[li,li+1,li+2,li+3].filter(i=>i<SOLD_COLUMNS.length).reduce((a,i)=>a+wkTotal(items,i),0);
+  const pr4=[pi,pi+1,pi+2,pi+3].filter(i=>i<SOLD_COLUMNS.length).reduce((a,i)=>a+wkTotal(items,i),0);
+  const total=items.reduce((a,it)=>a+getTotal(it,n),0);
+  const avg=n?total/n:0;
+  const as=activeSkus(items,n);
+  const ll=SOLD_COLUMNS[li]?.label||"Latest",pl=SOLD_COLUMNS[pi]?.label||"Prior";
+  const cards=[
+    {label:`${ll} cases`,val:cw,d:pctDelta(cw,pw),sub:`vs ${pl}`},
+    {label:"Rolling 4-week",val:r4,d:pctDelta(r4,pr4),sub:"latest rolling month"},
+    {label:`${getPeriodDef().label} avg/week`,val:avg,d:pctDelta(avg,pw),sub:`${fmt(total)} total`},
+    {label:"Active SKUs",val:as,d:0,sub:`${items.length} in view`}
+  ];
+  document.getElementById("kpis").innerHTML=cards.map(c=>`
+    <div class="kpi">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-row"><div class="kpi-val">${fmt(c.val)}</div><div class="delta ${dcls(c.d)}">${fmtPct(c.d)}</div></div>
+      <div class="kpi-sub">${c.sub}</div>
+    </div>`).join("");
+}
+
+function renderBar(){
+  const items=getItems(),n=getPeriodDef().n,top=topItems(items,n,20);
+  document.getElementById("skuCount").textContent=`${top.length} SKUs shown`;
+  if(barChart)barChart.destroy();
+  const shell=document.getElementById("barShell");
+  shell.style.height=Math.max(360,top.length*28+80)+"px";
+  if(!top.length){shell.innerHTML=`<div class="empty">No SKUs for this filter.</div>`;return;}
+  shell.innerHTML=`<canvas id="barChart" role="img"></canvas>`;
+  barChart=new Chart(document.getElementById("barChart"),{
+    type:"bar",
+    data:{
+      labels:top.map(it=>it.name.length>48?it.name.slice(0,46)+"…":it.name),
+      datasets:[{label:"Cases",data:top.map(it=>Math.round(it.total)),
+        backgroundColor:top.map(it=>FAMILY_META[it.family]?.color||FAMILY_META.other.color),
+        borderRadius:6,barThickness:16}]
+    },
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)} cases`}}},
+      scales:{x:{ticks:{color:"#4d6a8f"},grid:{color:"rgba(255,255,255,.05)"}},y:{ticks:{color:"#8fa8cc",font:{size:10},autoSkip:false},grid:{display:false}}}
     }
+  });
+}
 
-    shell.innerHTML = `<canvas id="barChart" aria-label="Top SKUs bar chart" role="img"></canvas>`;
-    const ctx = document.getElementById("barChart");
-
-    barChart = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: top.map(item => item.name.length > 48 ? `${item.name.slice(0, 46)}…` : item.name),
-        datasets: [{
-          label: "Cases",
-          data: top.map(item => Math.round(item.total)),
-          backgroundColor: top.map(item => FAMILY_META[item.family]?.color || FAMILY_META.other.color),
-          borderRadius: 6,
-          borderSkipped: false,
-          barThickness: 16
-        }]
-      },
-      options: {
-        indexAxis: "y",
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: (ctx) => ` ${fmt(ctx.raw)} cases`
-            }
-          }
-        },
-        scales: {
-          x: {
-            ticks: { color: "#4d6a8f" },
-            grid: { color: "rgba(255,255,255,.05)" }
-          },
-          y: {
-            ticks: {
-              color: "#8fa8cc",
-              font: { size: 10 },
-              autoSkip: false
-            },
-            grid: { display: false }
-          }
-        }
-      }
-    });
-  }
-
-  function renderLineChart() {
-    const items = getItemsForActiveFamily();
-    const n = getActivePeriodDef().n;
-    const top = getTopItems(items, n, 5);
-
-    document.getElementById("trendLabel").textContent =
-      activeFamily === "all"
-        ? "All channels"
-        : FAMILY_META[activeFamily]?.label || activeFamily;
-
-    const shell = document.getElementById("lineChart").parentElement;
-
-    if (lineChart) lineChart.destroy();
-
-    if (!top.length) {
-      shell.innerHTML = `<div class="empty">No trend data available for this filter.</div>`;
-      return;
+function renderLine(){
+  const items=getItems(),n=getPeriodDef().n,top=topItems(items,n,5);
+  document.getElementById("trendLabel").textContent=activeFamily==="all"?"All channels":(FAMILY_META[activeFamily]?.label||activeFamily);
+  const shell=document.getElementById("lineChart").parentElement;
+  if(lineChart)lineChart.destroy();
+  if(!top.length){shell.innerHTML=`<div class="empty">No trend data.</div>`;return;}
+  shell.innerHTML=`<canvas id="lineChart" role="img"></canvas>`;
+  lineChart=new Chart(document.getElementById("lineChart"),{
+    type:"line",
+    data:{
+      labels:SOLD_COLUMNS.slice(0,n).map(c=>c.label).reverse(),
+      datasets:top.map(it=>({
+        label:it.name.length>30?it.name.slice(0,28)+"…":it.name,
+        data:getPVals(it,n).reverse(),
+        borderColor:FAMILY_META[it.family]?.color||FAMILY_META.other.color,
+        backgroundColor:"transparent",borderWidth:2.2,pointRadius:2.5,tension:0.3
+      }))
+    },
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+      plugins:{legend:{labels:{color:"#8fa8cc",boxWidth:10,usePointStyle:true,font:{size:10}}}},
+      scales:{x:{ticks:{color:"#4d6a8f",font:{size:9}},grid:{color:"rgba(255,255,255,.05)"}},y:{ticks:{color:"#4d6a8f"},grid:{color:"rgba(255,255,255,.05)"}}}
     }
+  });
+}
 
-    shell.innerHTML = `<canvas id="lineChart" aria-label="Weekly trend line chart" role="img"></canvas>`;
-    const ctx = document.getElementById("lineChart");
+function renderSummary(){
+  const n=getPeriodDef().n;
+  document.getElementById("channelSummary").innerHTML=availFamilies().map(fam=>{
+    const items=fam==="all"?RAW_ITEMS:RAW_ITEMS.filter(it=>it.family===fam);
+    const li=latestIdx(items),pi=Math.min(li+1,SOLD_COLUMNS.length-1);
+    const total=items.reduce((a,it)=>a+getTotal(it,n),0);
+    const lw=wkTotal(items,li),pw=wkTotal(items,pi);
+    const as=activeSkus(items,n);
+    const meta=FAMILY_META[fam]||FAMILY_META.other;
+    return`<div class="sum-card" style="border-top-color:${meta.color}">
+      <div class="sum-title">${meta.label}</div>
+      <div class="sum-value">${fmt(total)}</div>
+      <div class="sum-meta">${SOLD_COLUMNS[li]?.label||"Latest"}: ${fmt(lw)} (${fmtPct(pctDelta(lw,pw))})<br>Active SKUs: ${fmt(as)}</div>
+    </div>`;
+  }).join("");
+}
 
-    lineChart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: SOLD_COLUMNS.slice(0, n).map(c => c.label).reverse(),
-        datasets: top.map(item => ({
-          label: item.name.length > 30 ? `${item.name.slice(0, 28)}…` : item.name,
-          data: getPeriodValues(item, n).reverse(),
-          borderColor: FAMILY_META[item.family]?.color || FAMILY_META.other.color,
-          backgroundColor: "transparent",
-          borderWidth: 2.2,
-          pointRadius: 2.5,
-          pointHoverRadius: 4,
-          tension: 0.3
-        }))
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: "index", intersect: false },
-        plugins: {
-          legend: {
-            labels: {
-              color: "#8fa8cc",
-              boxWidth: 10,
-              usePointStyle: true,
-              font: { size: 10 }
-            }
-          }
-        },
-        scales: {
-          x: {
-            ticks: { color: "#4d6a8f", font: { size: 9 } },
-            grid: { color: "rgba(255,255,255,.05)" }
-          },
-          y: {
-            ticks: { color: "#4d6a8f" },
-            grid: { color: "rgba(255,255,255,.05)" }
-          }
-        }
-      }
-    });
-  }
-
-  function renderChannelSummary() {
-    const families = getAvailableFamilies();
-    const n = getActivePeriodDef().n;
-
-    const html = families.map(family => {
-      const items = family === "all"
-        ? RAW_ITEMS
-        : RAW_ITEMS.filter(item => item.family === family);
-
-      const latestIdx = getMostRecentNonEmptyWeekIndex(items);
-      const priorIdx = Math.min(latestIdx + 1, SOLD_COLUMNS.length - 1);
-
-      const total = items.reduce((acc, item) => acc + getPeriodTotal(item, n), 0);
-      const latest = getWeekTotal(items, latestIdx);
-      const prior = getWeekTotal(items, priorIdx);
-      const active = getActiveSkuCount(items, n);
-      const meta = FAMILY_META[family] || FAMILY_META.other;
-
-      return `
-        <div class="sum-card" style="border-top-color:${meta.color}">
-          <div class="sum-title">${meta.label}</div>
-          <div class="sum-value">${fmt(total)}</div>
-          <div class="sum-meta">
-            ${SOLD_COLUMNS[latestIdx]?.label || "Latest"}: ${fmt(latest)} (${formatPercent(percentDelta(latest, prior))})<br/>
-            Active SKUs: ${fmt(active)}
-          </div>
-        </div>
-      `;
-    }).join("");
-
-    document.getElementById("channelSummary").innerHTML = html;
-  }
-
-  function renderOntarioSplit() {
-    const onItems = RAW_ITEMS.filter(item => item.family === "on");
-    const buckets = ["GL", "FT", "Other ON"];
-    const colors = {
-      "GL": "#f04f7a",
-      "FT": "#a67cf6",
-      "Other ON": "#00c8d4"
-    };
-    const n = Math.min(getActivePeriodDef().n, 13);
-
-    document.getElementById("ontarioSplit").innerHTML = buckets.map(bucket => {
-      const items = onItems.filter(item => item.ontarioType === bucket);
-      const latestIdx = getMostRecentNonEmptyWeekIndex(items.length ? items : onItems);
-      const priorIdx = Math.min(latestIdx + 1, SOLD_COLUMNS.length - 1);
-      const total = items.reduce((acc, item) => acc + getPeriodTotal(item, getActivePeriodDef().n), 0);
-      const latest = getWeekTotal(items, latestIdx);
-      const prior = getWeekTotal(items, priorIdx);
-
-      return `
-        <div class="sum-card" style="border-top-color:${colors[bucket]}">
-          <div class="sum-title">${bucket}</div>
-          <div class="sum-value">${fmt(total)}</div>
-          <div class="sum-meta">
-            ${SOLD_COLUMNS[latestIdx]?.label || "Latest"}: ${fmt(latest)} (${formatPercent(percentDelta(latest, prior))})
-          </div>
-        </div>
-      `;
-    }).join("");
-
-    if (ontarioChart) ontarioChart.destroy();
-
-    const ctx = document.getElementById("ontarioChart");
-    ontarioChart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: SOLD_COLUMNS.slice(0, n).map(c => c.label).reverse(),
-        datasets: buckets.map(bucket => {
-          const items = onItems.filter(item => item.ontarioType === bucket);
-          const series = Array.from({ length: n }, (_, i) => getWeekTotal(items, i)).reverse();
-
-          return {
-            label: bucket,
-            data: series,
-            borderColor: colors[bucket],
-            backgroundColor: "transparent",
-            borderWidth: 2,
-            pointRadius: 2,
-            tension: 0.3
-          };
-        })
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            labels: {
-              color: "#8fa8cc",
-              boxWidth: 10,
-              usePointStyle: true,
-              font: { size: 10 }
-            }
-          }
-        },
-        scales: {
-          x: {
-            ticks: { color: "#4d6a8f", font: { size: 9 } },
-            grid: { color: "rgba(255,255,255,.04)" }
-          },
-          y: {
-            ticks: { color: "#4d6a8f" },
-            grid: { color: "rgba(255,255,255,.04)" }
-          }
-        }
-      }
-    });
-  }
-
-  function renderOosTable() {
-    const items = [...RAW_ITEMS]
-      .map(item => {
-        let count = 0;
-        let lastIdx = -1;
-
-        item.values.forEach((v, idx) => {
-          if (v.oos) {
-            count += 1;
-            if (lastIdx === -1) lastIdx = idx;
-          }
-        });
-
-        return {
-          ...item,
-          oosCount: count,
-          lastOosLabel: lastIdx >= 0 ? SOLD_COLUMNS[lastIdx]?.label : "—"
-        };
+function renderOntario(){
+  const onItems=RAW_ITEMS.filter(it=>it.family==="on");
+  const buckets=["GL","FT","Other ON"];
+  const cols={"GL":"#f04f7a","FT":"#a67cf6","Other ON":"#00c8d4"};
+  const n=Math.min(getPeriodDef().n,13);
+  document.getElementById("ontarioSplit").innerHTML=buckets.map(b=>{
+    const items=onItems.filter(it=>it.ontarioType===b);
+    const li=latestIdx(items.length?items:onItems),pi=Math.min(li+1,SOLD_COLUMNS.length-1);
+    const total=items.reduce((a,it)=>a+getTotal(it,getPeriodDef().n),0);
+    const lw=wkTotal(items,li),pw=wkTotal(items,pi);
+    return`<div class="sum-card" style="border-top-color:${cols[b]}">
+      <div class="sum-title">${b}</div>
+      <div class="sum-value">${fmt(total)}</div>
+      <div class="sum-meta">${SOLD_COLUMNS[li]?.label||"Latest"}: ${fmt(lw)} (${fmtPct(pctDelta(lw,pw))})</div>
+    </div>`;
+  }).join("");
+  if(ontarioChart)ontarioChart.destroy();
+  ontarioChart=new Chart(document.getElementById("ontarioChart"),{
+    type:"line",
+    data:{
+      labels:SOLD_COLUMNS.slice(0,n).map(c=>c.label).reverse(),
+      datasets:buckets.map(b=>{
+        const items=onItems.filter(it=>it.ontarioType===b);
+        return{label:b,data:Array.from({length:n},(_,i)=>wkTotal(items,i)).reverse(),
+          borderColor:cols[b],backgroundColor:"transparent",borderWidth:2,pointRadius:2,tension:0.3};
       })
-      .filter(item => item.oosCount > 0)
-      .sort((a, b) => b.oosCount - a.oosCount)
-      .slice(0, 20);
-
-    document.getElementById("oosBody").innerHTML = items.map(item => {
-      const sevClass = item.oosCount >= 5 ? "dn" : item.oosCount >= 2 ? "neu" : "up";
-      const sevLabel = item.oosCount >= 5 ? "High" : item.oosCount >= 2 ? "Moderate" : "Low";
-      return `
-        <tr>
-          <td>${item.name.length > 42 ? `${item.name.slice(0, 40)}…` : item.name}</td>
-          <td style="color:${FAMILY_META[item.family]?.color || FAMILY_META.other.color}">
-            ${FAMILY_META[item.family]?.label || item.family}
-          </td>
-          <td>${item.lastOosLabel}</td>
-          <td class="${sevClass}">${item.oosCount}</td>
-          <td class="${sevClass}">${sevLabel}</td>
-        </tr>
-      `;
-    }).join("");
-  }
-
-  function renderAll() {
-    renderPeriodTabs();
-    renderChannelTabs();
-    renderKPIs();
-    renderBarChart();
-    renderLineChart();
-    renderChannelSummary();
-    renderOntarioSplit();
-    renderOosTable();
-  }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // MAIN
-  // ────────────────────────────────────────────────────────────────────────────
-  async function main() {
-    try {
-      logBoot("App boot started");
-
-      const boardId = await getContextBoardId();
-      logBoot(`Resolved board ID: ${boardId}`);
-
-      const board = await fetchBoardStructure(boardId);
-      logBoot(`Board loaded: ${board.name}`);
-
-      document.getElementById("boardMeta").textContent =
-        `${board.name} · Board #${boardId} · Live data`;
-
-      SOLD_COLUMNS = (board.columns || [])
-        .filter(col =>
-          /^Sold\\s+/i.test(col.title) &&
-          (col.type === "text" || col.type === "numbers")
-        )
-        .map(col => ({
-          id: col.id,
-          title: col.title,
-          label: col.title.replace(/^Sold\\s+/i, ""),
-          date: parseSoldColumnDate(col.title)
-        }))
-        .sort((a, b) => b.date - a.date);
-
-      logBoot(`Detected ${SOLD_COLUMNS.length} sold columns`);
-
-      if (!SOLD_COLUMNS.length) {
-        throw new Error('No "Sold ..." columns found.');
-      }
-
-      const items = await fetchAllItems(boardId, SOLD_COLUMNS.map(c => c.id));
-      logBoot(`Fetched ${items.length} raw items`);
-
-      RAW_ITEMS = items
-        .map(item => {
-          const groupTitle = item.group?.title || "";
-          const family = detectFamilyFromGroup(groupTitle);
-
-          const valueByColId = {};
-          (item.column_values || []).forEach(cv => {
-            valueByColId[cv.id] = cv.text;
-          });
-
-          const values = SOLD_COLUMNS.map(col => parseValue(valueByColId[col.id]));
-          const ontarioType = family === "on" ? detectOntarioType(item.name) : null;
-
-          return {
-            id: item.id,
-            name: item.name,
-            groupTitle,
-            family,
-            ontarioType,
-            values
-          };
-        })
-        .filter(item => !isSummaryRow(item.name))
-        .filter(item => item.family !== "retired")
-        .filter(item => item.values.some(v => v.val > 0 || v.oos));
-
-      logBoot(`Usable items after cleanup: ${RAW_ITEMS.length}`);
-
-      PERIODS = [
-        { key: "4w",  label: "4 weeks",  n: Math.min(4, SOLD_COLUMNS.length) },
-        { key: "8w",  label: "8 weeks",  n: Math.min(8, SOLD_COLUMNS.length) },
-        { key: "13w", label: "13 weeks", n: Math.min(13, SOLD_COLUMNS.length) },
-        { key: "26w", label: "26 weeks", n: Math.min(26, SOLD_COLUMNS.length) },
-        { key: "52w", label: "52 weeks", n: Math.min(52, SOLD_COLUMNS.length) },
-        { key: "all", label: `All (${SOLD_COLUMNS.length}w)`, n: SOLD_COLUMNS.length }
-      ].filter((p, idx, arr) => idx === 0 || p.n > arr[idx - 1].n);
-
-      if (!PERIODS.some(p => p.key === activePeriod)) {
-        activePeriod = PERIODS[0].key;
-      }
-
-      document.getElementById("loadingState").classList.add("hidden");
-      document.getElementById("errorState").classList.add("hidden");
-      document.getElementById("dashboard").classList.remove("hidden");
-
-      logBoot("Rendering dashboard");
-      renderAll();
-      logBoot("Dashboard ready");
-    } catch (err) {
-      console.error(err);
-      showError(err?.message || "Unknown error");
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:"#8fa8cc",boxWidth:10,usePointStyle:true,font:{size:10}}}},
+      scales:{x:{ticks:{color:"#4d6a8f",font:{size:9}},grid:{color:"rgba(255,255,255,.04)"}},y:{ticks:{color:"#4d6a8f"},grid:{color:"rgba(255,255,255,.04)"}}}
     }
-  }
+  });
+}
 
-  main();
+function renderOOS(){
+  const items=[...RAW_ITEMS].map(it=>{
+    let count=0,lastIdx=-1;
+    it.values.forEach((v,i)=>{if(v.oos){count++;if(lastIdx<0)lastIdx=i;}});
+    return{...it,oosCount:count,lastOosLabel:lastIdx>=0?SOLD_COLUMNS[lastIdx]?.label:"—"};
+  }).filter(it=>it.oosCount>0).sort((a,b)=>b.oosCount-a.oosCount).slice(0,20);
+  document.getElementById("oosBody").innerHTML=items.map(it=>{
+    const sc=it.oosCount>=5?"dn":it.oosCount>=2?"neu":"up";
+    const sl=it.oosCount>=5?"High":it.oosCount>=2?"Moderate":"Low";
+    return`<tr>
+      <td>${it.name.length>42?it.name.slice(0,40)+"…":it.name}</td>
+      <td style="color:${FAMILY_META[it.family]?.color||FAMILY_META.other.color}">${FAMILY_META[it.family]?.label||it.family}</td>
+      <td>${it.lastOosLabel}</td><td class="${sc}">${it.oosCount}</td><td class="${sc}">${sl}</td>
+    </tr>`;
+  }).join("");
+}
+
+function renderAll(){renderTabs();renderKPIs();renderBar();renderLine();renderSummary();renderOntario();renderOOS();}
+
+// ── MAIN ──────────────────────────────────────────────────────────────────────
+async function main(){
+  try{
+    logBoot("App boot started");
+    logBoot("Requesting context…");
+
+    const ctx=await getContextWithTimeout(6000);
+    logBoot("Context received: "+JSON.stringify(ctx));
+
+    let boardId=getBoardId(ctx);
+
+    // URL fallback — works when opened as External Hosting
+    if(!boardId){
+      const urlParams=new URLSearchParams(window.location.search);
+      boardId=urlParams.get("boardId");
+      if(boardId) logBoot("Board ID from URL param: "+boardId);
+    }
+
+    if(!boardId){
+      throw new Error("No board ID in context or URL. Make sure the app is opened from inside a Monday.com board.");
+    }
+
+    boardId=Number(boardId);
+    logBoot(`Board ID resolved: ${boardId}`);
+
+    const board=await fetchStructure(boardId);
+    logBoot(`Board: ${board.name}`);
+    document.getElementById("boardMeta").textContent=`${board.name} · Board #${boardId} · Live data`;
+
+    SOLD_COLUMNS=(board.columns||[])
+      .filter(c=>/^Sold\s+/i.test(c.title)&&(c.type==="text"||c.type==="numbers"))
+      .map(c=>({id:c.id,title:c.title,label:c.title.replace(/^Sold\s+/i,""),date:parseSoldColDate(c.title)}))
+      .sort((a,b)=>b.date-a.date);
+    logBoot(`Sold columns: ${SOLD_COLUMNS.length}`);
+    if(!SOLD_COLUMNS.length)throw new Error('No "Sold *" columns found.');
+
+    const rawItems=await fetchAllItems(boardId,SOLD_COLUMNS.map(c=>c.id));
+    logBoot(`Raw items: ${rawItems.length}`);
+
+    RAW_ITEMS=rawItems.map(it=>{
+      const groupTitle=it.group?.title||"";
+      const family=detectFamily(groupTitle);
+      const colMap={};
+      (it.column_values||[]).forEach(cv=>{colMap[cv.id]=cv.text;});
+      const values=SOLD_COLUMNS.map(c=>parseVal(colMap[c.id]));
+      return{id:it.id,name:it.name,groupTitle,family,ontarioType:family==="on"?detectONType(it.name):null,values};
+    }).filter(it=>!isSummaryRow(it.name)&&it.family!=="retired"&&it.values.some(v=>v.val>0||v.oos));
+    logBoot(`Usable items: ${RAW_ITEMS.length}`);
+
+    const tc=SOLD_COLUMNS.length;
+    PERIODS=[
+      {key:"4w",label:"4 weeks",n:Math.min(4,tc)},
+      {key:"8w",label:"8 weeks",n:Math.min(8,tc)},
+      {key:"13w",label:"13 weeks",n:Math.min(13,tc)},
+      {key:"26w",label:"26 weeks",n:Math.min(26,tc)},
+      {key:"52w",label:"52 weeks",n:Math.min(52,tc)},
+      {key:"all",label:`All (${tc}w)`,n:tc}
+    ].filter((p,i,arr)=>i===0||p.n>arr[i-1].n);
+    if(!PERIODS.some(p=>p.key===activePeriod))activePeriod=PERIODS[0].key;
+
+    document.getElementById("loadingState").classList.add("hidden");
+    document.getElementById("errorState").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
+    logBoot("Rendering…");
+    renderAll();
+    logBoot("Dashboard ready ✓");
+  }catch(err){
+    console.error(err);
+    showError(err?.message||"Unknown error");
+  }
+}
+
+main();
 })();
 </script>
 </body>
