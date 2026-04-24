@@ -207,7 +207,7 @@ const API_URL='https://api.monday.com/v2';
 const API_VERSION='2024-10';
 const OOS_HISTORY_WEEKS=52;
 const BOARDS={'18408693968':'Pistol Sales','18410021052':'Vanquish Sales','18410021152':'Medical Sales','18410018798':'Direct Delivery','18410017911':'Bonkers Sales'};
-const FAMILY_META={all:{label:'All',color:'#7f8ea3'},bc:{label:'BC',color:'#2d7cf6'},ab:{label:'AB',color:'#10c97a'},on:{label:'ON',color:'#f04f7a'},qc:{label:'QC',color:'#ff6b6b'},atlantic:{label:'Atlantic',color:'#00c8d4'},skmb:{label:'SK·MB',color:'#a67cf6'},territories:{label:'Territories',color:'#ffd740'},other:{label:'Other',color:'#7f8ea3'}};
+const FAMILY_META={all:{label:'All',color:'#7f8ea3'},bc:{label:'BC',color:'#2d7cf6'},ab:{label:'AB',color:'#10c97a'},on:{label:'ON',color:'#f04f7a'},qc:{label:'QC',color:'#ff6b6b'},atlantic:{label:'Atlantic',color:'#00c8d4'},sk:{label:'SK',color:'#a67cf6'},mb:{label:'MB',color:'#c084fc'},territories:{label:'Territories',color:'#ffd740'},other:{label:'Other',color:'#7f8ea3'}};
 const MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 let TOKEN='',BOARD_ID='',RAW_ITEMS=[],SOLD_COLS=[],PERIODS=[];
@@ -304,7 +304,8 @@ function detectFamily(g){
   if(/\bON\b/i.test(t)||/^OCS\b/i.test(t))return'on';
   if(/^QC\b/i.test(t)||/^Quebec\b/i.test(t))return'qc';
   if(/^(NS|NL)\b/i.test(t)||/^Nova\s+Scotia\b/i.test(t)||/^Newfoundland\b/i.test(t))return'atlantic';
-  if(/^(SK|MB)\b/i.test(t)||/^Saskatchewan\b/i.test(t)||/^Manitoba\b/i.test(t))return'skmb';
+  if(/^SK\b/i.test(t)||/^Saskatchewan\b/i.test(t))return'sk';
+  if(/^MB\b/i.test(t)||/^Manitoba\b/i.test(t))return'mb';
   if(/^(NWT|YK)\b/i.test(t)||/^Yukon\b/i.test(t))return'territories';
   if(/^Vanquish\s+Direct\b/i.test(t))return'bc';
   return'other';
