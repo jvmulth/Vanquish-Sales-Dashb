@@ -99,7 +99,7 @@ canvas{width:100%!important;height:100%!important}
   <div class="token-box">
     <label>Monday.com API Token</label>
     <input type="password" id="tokenInput" placeholder="eyJhbGciOiJIUzI1NiJ9..."/>
-    <div class="token-hint">Find token: <strong>Monday</strong> → avatar → <strong>Administration</strong> → <strong>API</strong> → Personal API Token &middot; <a href="https://vanquish-holdings.monday.com/admin/integrations/api" target="_blank">Open &nearr;</a></div>
+    <div class="token-hint">Find token: <strong>Monday</strong> → avatar → <strong>Developer</strong> → <strong>API token</strong> (left sidebar) &middot; <a href="https://vanquish-holdings.monday.com/apps/manage/tokens" target="_blank">Open &nearr;</a></div>
     <div class="boards-label">Select Board</div>
     <div class="board-presets">
       <button class="board-btn" data-id="18408693968" onclick="selectBoard(this)"><strong>Pistol Sales</strong>18408693968</button>
@@ -283,17 +283,19 @@ function parseVal(raw){
 // Used for monthly bucketing only — NOT for ordering (board order is used for that)
 const MONTH_MAP={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
 function parseLabelDate(label,colIndex){
-  // colIndex 0 = most recent. We use this to assign approximate year.
-  // Anchor: board loaded "now". Most recent col = current month.
+  // colIndex 0 = most recent.
+  // Year estimation: anchor on current date, subtract colIndex weeks.
+  // This is correct because colIndex 0 = this week, colIndex 52 = ~1 year ago, etc.
   const m=label.match(/([A-Za-z]+)\s+(\d{1,2})/);
   if(!m)return null;
   const mon=MONTH_MAP[m[1].toLowerCase().slice(0,3)];
   if(mon===undefined)return null;
   const day=parseInt(m[2],10);
-  // Estimate year: start from current date and go back by colIndex weeks
-  const now=new Date();
-  const approx=new Date(now.getTime()-colIndex*7*24*3600*1000);
-  return{year:approx.getFullYear(),month:mon,day,key:`${approx.getFullYear()}-${String(mon+1).padStart(2,'0')}`};
+  // Anchor: col 0 = most recent week. Go backwards from today.
+  const anchor=new Date();
+  anchor.setDate(anchor.getDate()-colIndex*7);
+  const year=anchor.getFullYear();
+  return{year,month:mon,day,key:`${year}-${String(mon+1).padStart(2,'0')}`};
 }
 
 function detectFamily(g){
@@ -529,7 +531,9 @@ function renderSummary(){
 
 // ── MONTHLY CHART ─────────────────────────────────────────────────────────────
 function renderMonthly(){
-  const items=filtered();
+  // Monthly always shows ALL items (not filtered by channel) — uses RAW_ITEMS
+  // and correctly uses parseVal values (already stored in .values[i].val)
+  const items=RAW_ITEMS;
   // Group columns by month key (e.g. "2026-04")
   const monthMap={};
   SOLD_COLS.forEach((col,i)=>{
@@ -537,6 +541,7 @@ function renderMonthly(){
     const key=col.dateInfo.key;
     const label=`${MONTH_NAMES[col.dateInfo.month]} ${col.dateInfo.year}`;
     if(!monthMap[key])monthMap[key]={label,total:0,order:col.dateInfo.year*100+col.dateInfo.month};
+    // wkTot uses .values[i].val which already has parseVal applied (X only from X+Y)
     const weekTotal=items.reduce((s,it)=>s+(it.values[i]?.val||0),0);
     monthMap[key].total+=weekTotal;
   });
